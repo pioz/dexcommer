@@ -2,10 +2,6 @@
 
 Read lastest glucose values using Dexcom Follow credentials from command line (it's written in Go!).
 
-## Requirements
-
-Go v1.17 or greater.
-
 ## Installation
 
 ```bash
@@ -15,7 +11,7 @@ go get github.com/pioz/dexcommer
 ## Usage
 
 ```bash
-$ DEXCOMMER_USERNAME=enrico DEXCOMMER_PASSWORD=passw0rd dexcommer
+$ DEXCOMMER_USERNAME=enrico DEXCOMMER_PASSWORD=passw0rd DEXCOMMER_APPLICATION_ID=1234 dexcommer
 ```
 
 You can set the env variables in a `.env` file
@@ -25,6 +21,8 @@ Available environment variables are:
 - DEXCOMMER_USERNAME
 - DEXCOMMER_PASSWORD
 - DEXCOMMER_APPLICATION_ID
+
+Run `dexcommer -h` to display cli options.
 
 ## Lib
 
