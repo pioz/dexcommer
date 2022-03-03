@@ -1,6 +1,6 @@
 # Dexcommer
 
-Read last glucose values using Dexcom Follow credentials from command line (it's written in Go!).
+Read lastest glucose values using Dexcom Follow credentials from command line (it's written in Go!).
 
 ## Requirements
 
@@ -25,6 +25,10 @@ Available environment variables are:
 - DEXCOMMER_USERNAME
 - DEXCOMMER_PASSWORD
 - DEXCOMMER_APPLICATION_ID
+
+## Lib
+
+You can also read the latest glucose values from your Go program, here the [godoc](https://godoc.org/github.com/pioz/dexcommer).
 
 ## Questions or problems?
 

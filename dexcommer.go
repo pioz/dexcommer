@@ -1,15 +1,11 @@
-package main
+package dexcommer
 
 import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
-
-	"github.com/joho/godotenv"
 )
 
 const endpoint = "https://shareous1.dexcom.com/ShareWebServices/Services"
@@ -65,7 +61,7 @@ func getSessionId(accountId, password, applicationId string) string {
 	return s[1 : len(s)-1]
 }
 
-func getData(sessionId string) string {
+func getLastestGlucoseValues(sessionId string) string {
 	body, err := post("/Publisher/ReadPublisherLatestGlucoseValues?sessionID="+sessionId+"&minutes=1440&maxCount=6", nil)
 	if err != nil {
 		panic(err)
@@ -74,19 +70,11 @@ func getData(sessionId string) string {
 	return s
 }
 
-func init() {
-	err := godotenv.Load()
-	if err != nil {
-		panic(err)
-	}
-}
-
-func main() {
-	applicationId := os.Getenv("DEXCOMMER_APPLICATION_ID")
-	if applicationId == "" {
-		applicationId = "d89443d2-327c-4a6f-89e5-496bbb0317db"
-	}
-	accountId := getAccoundId(os.Getenv("DEXCOMMER_ACCOUNT_NAME"), os.Getenv("DEXCOMMER_PASSWORD"), applicationId)
-	sessionId := getSessionId(accountId, os.Getenv("DEXCOMMER_PASSWORD"), applicationId)
-	fmt.Println(getData(sessionId))
+// ReadLastestGlucoseValues fetch the latest glucose values using your Dexcom
+// Follow credentials. If you do not have an applicationId you can use
+// Nightscout's applicationId which is "d89443d2-327c-4a6f-89e5-496bbb0317db".
+func ReadLastestGlucoseValues(username, password, applicationId string) string {
+	accountId := getAccoundId(username, password, applicationId)
+	sessionId := getSessionId(accountId, password, applicationId)
+	return getLastestGlucoseValues(sessionId)
 }
