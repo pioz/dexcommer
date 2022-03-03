@@ -4,11 +4,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"regexp"
+	"strconv"
+	"time"
 )
 
 const endpoint = "https://shareous1.dexcom.com/ShareWebServices/Services"
+
+var dateRegexp = regexp.MustCompile(`^Date\((\d+)\)$`)
 
 func post(path string, params map[string]string) ([]byte, error) {
 	jsonParams, err := json.Marshal(params)
@@ -61,20 +67,57 @@ func getSessionId(accountId, password, applicationId string) string {
 	return s[1 : len(s)-1]
 }
 
-func getLastestGlucoseValues(sessionId string) string {
-	body, err := post("/Publisher/ReadPublisherLatestGlucoseValues?sessionID="+sessionId+"&minutes=1440&maxCount=6", nil)
+type glucoseValueResponse struct {
+	Date  string `json:"WT"`
+	Value int
+	Trend string
+}
+
+type GlucoseValue struct {
+	Date  time.Time
+	Value int
+	Trend string
+}
+
+func getLastestGlucoseValues(sessionId string, minutes int, count int) []GlucoseValue {
+	url := fmt.Sprintf("/Publisher/ReadPublisherLatestGlucoseValues?sessionID=%s&minutes=%d&maxCount=%d", sessionId, minutes, count)
+	body, err := post(url, nil)
 	if err != nil {
 		panic(err)
 	}
-	s := string(body)
-	return s
+
+	rawGlucoseValues := make([]glucoseValueResponse, 0, count)
+	json.Unmarshal(body, &rawGlucoseValues)
+
+	glucoseValues := make([]GlucoseValue, count)
+	for i, value := range rawGlucoseValues {
+		captures := dateRegexp.FindStringSubmatch(value.Date)
+		if len(captures) != 2 {
+			panic("Invalid glucoseValueResponse Date field")
+		}
+		unixTimestamp, err := strconv.Atoi(captures[1])
+		if err != nil {
+			panic("Invalid glucoseValueResponse Date field")
+		}
+		glucoseValues[i].Date = time.UnixMilli(int64(unixTimestamp))
+		glucoseValues[i].Value = value.Value
+		glucoseValues[i].Trend = value.Trend
+	}
+
+	return glucoseValues
 }
 
-// ReadLastestGlucoseValues fetch the latest glucose values using your Dexcom
-// Follow credentials. If you do not have an applicationId you can use
-// Nightscout's applicationId which is "d89443d2-327c-4a6f-89e5-496bbb0317db".
-func ReadLastestGlucoseValues(username, password, applicationId string) string {
+type Session struct {
+	accountId string
+	sessionId string
+}
+
+func NewSession(username, password, applicationId string) *Session {
 	accountId := getAccoundId(username, password, applicationId)
 	sessionId := getSessionId(accountId, password, applicationId)
-	return getLastestGlucoseValues(sessionId)
+	return &Session{accountId, sessionId}
+}
+
+func (session *Session) ReadLastestGlucoseValues(minutes, count int) []GlucoseValue {
+	return getLastestGlucoseValues(session.sessionId, minutes, count)
 }
