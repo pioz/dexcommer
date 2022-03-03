@@ -1,6 +1,6 @@
 # Dexcommer
 
-Read last glucose values using Dexcom Follow credentials from command line.
+Read last glucose values using Dexcom Follow credentials from command line (it's written in Go!).
 
 ## Requirements
 
